@@ -70,26 +70,30 @@ document.getElementById('decodeButton').addEventListener('click', () => {
             const ctx = canvas.getContext('2d');
             canvas.width = image.width;
             canvas.height = image.height;
-            ctx.drawImage(image, 0, 0);
 
-            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            let binaryMsg = '';
+            // Use requestAnimationFrame to ensure image is drawn before decoding
+            requestAnimationFrame(() => {
+                ctx.drawImage(image, 0, 0);
 
-            for (let i = 0; i < imgData.data.length; i += 4) {
-                binaryMsg += (imgData.data[i] & 1).toString(); // Extract LSB from red channel
-                if (i % 32 === 0) {
-                    const eom = getEOMIndex(binaryMsg);
-                    if (eom) break;
+                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                let binaryMsg = '';
+
+                for (let i = 0; i < imgData.data.length; i += 4) {
+                    binaryMsg += (imgData.data[i] & 1).toString(); // Extract LSB from red channel
+                    if (i % 32 === 0) {
+                        const eom = getEOMIndex(binaryMsg);
+                        if (eom) break;
+                    }
                 }
-            }
 
-            const decodedMsg = binaryToAscii(binaryMsg);
-            const eomIndex = getEOMIndex(binaryMsg);
-            if (eomIndex !== false) {
-                document.getElementById('decodedMessage').innerText = decodedMsg.slice(0, eomIndex / 8);
-            } else {
-                document.getElementById('decodedMessage').innerText = "No message found.";
-            }
+                const decodedMsg = binaryToAscii(binaryMsg);
+                const eomIndex = getEOMIndex(binaryMsg);
+                if (eomIndex !== false) {
+                    document.getElementById('decodedMessage').innerText = decodedMsg.slice(0, eomIndex / 8);
+                } else {
+                    document.getElementById('decodedMessage').innerText = "No message found.";
+                }
+            });
         };
     };
     reader.readAsDataURL(fileInput.files[0]);
